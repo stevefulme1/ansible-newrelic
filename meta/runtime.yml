@@ -1,0 +1,45 @@
+---
+requires_ansible: '>=2.16.0'
+action_groups:
+  newrelic:
+    - newrelic_alert_policy
+    - newrelic_alert_policy_info
+    - newrelic_alert_condition
+    - newrelic_alert_condition_info
+    - newrelic_dashboard
+    - newrelic_dashboard_info
+    - newrelic_synthetic_monitor
+    - newrelic_synthetic_monitor_info
+    - newrelic_workload
+    - newrelic_workload_info
+    - newrelic_service_level
+    - newrelic_service_level_info
+    - newrelic_nrql_query
+plugin_routing:
+  modules:
+    newrelic_alert_policy:
+      redirect: stevefulme1.newrelic.newrelic_alert_policy
+    newrelic_alert_policy_info:
+      redirect: stevefulme1.newrelic.newrelic_alert_policy_info
+    newrelic_alert_condition:
+      redirect: stevefulme1.newrelic.newrelic_alert_condition
+    newrelic_alert_condition_info:
+      redirect: stevefulme1.newrelic.newrelic_alert_condition_info
+    newrelic_dashboard:
+      redirect: stevefulme1.newrelic.newrelic_dashboard
+    newrelic_dashboard_info:
+      redirect: stevefulme1.newrelic.newrelic_dashboard_info
+    newrelic_synthetic_monitor:
+      redirect: stevefulme1.newrelic.newrelic_synthetic_monitor
+    newrelic_synthetic_monitor_info:
+      redirect: stevefulme1.newrelic.newrelic_synthetic_monitor_info
+    newrelic_workload:
+      redirect: stevefulme1.newrelic.newrelic_workload
+    newrelic_workload_info:
+      redirect: stevefulme1.newrelic.newrelic_workload_info
+    newrelic_service_level:
+      redirect: stevefulme1.newrelic.newrelic_service_level
+    newrelic_service_level_info:
+      redirect: stevefulme1.newrelic.newrelic_service_level_info
+    newrelic_nrql_query:
+      redirect: stevefulme1.newrelic.newrelic_nrql_query
