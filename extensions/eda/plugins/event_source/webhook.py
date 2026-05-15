@@ -19,7 +19,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     async def _handle(request: web.Request) -> web.Response:
         try:
             payload = await request.json()
-            event = {{"newrelic": payload}}
+            event = {dict([("newrelic", payload)])}
             await queue.put(event)
             return web.Response(status=200, text="OK")
         except Exception as exc:
