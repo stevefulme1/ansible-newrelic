@@ -6,8 +6,6 @@ readme: README.md
 authors:
   - Steve Fulmer <sfulmer@redhat.com>
 description: Ansible collection for New Relic management via NerdGraph API and Event-Driven Automation
-license:
-  - Apache-2.0
 license_file: LICENSE
 tags:
   - newrelic
