@@ -40,6 +40,10 @@ options:
         description: Whether to validate SSL certificates.
         type: bool
         default: true
+
+    monitor_id:
+        description: The monitor id.
+        type: str
 """
 
 EXAMPLES = r"""

@@ -40,6 +40,10 @@ options:
         description: Whether to validate SSL certificates.
         type: bool
         default: true
+
+    condition_id:
+        description: The condition id.
+        type: str
 """
 
 EXAMPLES = r"""

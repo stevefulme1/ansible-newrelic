@@ -40,6 +40,10 @@ options:
         description: Whether to validate SSL certificates.
         type: bool
         default: true
+
+    sli_guid:
+        description: The sli guid.
+        type: str
 """
 
 EXAMPLES = r"""

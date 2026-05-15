@@ -40,6 +40,10 @@ options:
         description: Whether to validate SSL certificates.
         type: bool
         default: true
+
+    query:
+        description: The query.
+        type: str
 """
 
 EXAMPLES = r"""

@@ -40,6 +40,10 @@ options:
         description: Whether to validate SSL certificates.
         type: bool
         default: true
+
+    workload_guid:
+        description: The workload guid.
+        type: str
 """
 
 EXAMPLES = r"""
