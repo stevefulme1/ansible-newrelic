@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for newrelic_dashboard_setup
+
+# Target host
+newrelic_dashboard_setup_host: ""
+
+# Authentication
+newrelic_dashboard_setup_username: ""
+newrelic_dashboard_setup_password: ""
+newrelic_dashboard_setup_api_key: ""
+
+# Behavior
+newrelic_dashboard_setup_validate_certs: true
+newrelic_dashboard_setup_state: present

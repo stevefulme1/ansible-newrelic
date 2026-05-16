@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for newrelic_synthetic_setup
+
+# Target host
+newrelic_synthetic_setup_host: ""
+
+# Authentication
+newrelic_synthetic_setup_username: ""
+newrelic_synthetic_setup_password: ""
+newrelic_synthetic_setup_api_key: ""
+
+# Behavior
+newrelic_synthetic_setup_validate_certs: true
+newrelic_synthetic_setup_state: present

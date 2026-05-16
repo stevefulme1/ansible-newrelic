@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: "Deploy and configure New Relic agents"
+    options:
+      newrelic_agent_deploy_host:
+        description: Target host address
+        type: str
+        required: true
+      newrelic_agent_deploy_username:
+        description: Authentication username
+        type: str
+      newrelic_agent_deploy_password:
+        description: Authentication password
+        type: str
+      newrelic_agent_deploy_api_key:
+        description: API key for authentication
+        type: str
+      newrelic_agent_deploy_validate_certs:
+        description: Validate SSL certificates
+        type: bool
+        default: true
+      newrelic_agent_deploy_state:
+        description: Desired state
+        type: str
+        default: present
+        choices: [present, absent]

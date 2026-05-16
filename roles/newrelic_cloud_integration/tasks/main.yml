@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for newrelic_cloud_integration
+# Configure cloud provider integrations
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - newrelic_cloud_integration_host is defined
+    fail_msg: "newrelic_cloud_integration_host must be defined"
+    quiet: true
+
+- name: Execute newrelic cloud integration
+  ansible.builtin.debug:
+    msg: >-
+      Configure cloud provider integrations.
+      Target: {{ newrelic_cloud_integration_host }}

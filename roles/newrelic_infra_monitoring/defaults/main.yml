@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for newrelic_infra_monitoring
+
+# Target host
+newrelic_infra_monitoring_host: ""
+
+# Authentication
+newrelic_infra_monitoring_username: ""
+newrelic_infra_monitoring_password: ""
+newrelic_infra_monitoring_api_key: ""
+
+# Behavior
+newrelic_infra_monitoring_validate_certs: true
+newrelic_infra_monitoring_state: present

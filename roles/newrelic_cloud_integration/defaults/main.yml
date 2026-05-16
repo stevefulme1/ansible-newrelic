@@ -1,0 +1,14 @@
+---
+# defaults/main.yml for newrelic_cloud_integration
+
+# Target host
+newrelic_cloud_integration_host: ""
+
+# Authentication
+newrelic_cloud_integration_username: ""
+newrelic_cloud_integration_password: ""
+newrelic_cloud_integration_api_key: ""
+
+# Behavior
+newrelic_cloud_integration_validate_certs: true
+newrelic_cloud_integration_state: present

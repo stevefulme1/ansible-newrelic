@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for newrelic_alert_setup
+# Create alert policies and notification channels
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - newrelic_alert_setup_host is defined
+    fail_msg: "newrelic_alert_setup_host must be defined"
+    quiet: true
+
+- name: Execute newrelic alert setup
+  ansible.builtin.debug:
+    msg: >-
+      Create alert policies and notification channels.
+      Target: {{ newrelic_alert_setup_host }}

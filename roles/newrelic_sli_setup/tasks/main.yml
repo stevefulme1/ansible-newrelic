@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for newrelic_sli_setup
+# Configure SLI/SLO objectives
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - newrelic_sli_setup_host is defined
+    fail_msg: "newrelic_sli_setup_host must be defined"
+    quiet: true
+
+- name: Execute newrelic sli setup
+  ansible.builtin.debug:
+    msg: >-
+      Configure SLI/SLO objectives.
+      Target: {{ newrelic_sli_setup_host }}

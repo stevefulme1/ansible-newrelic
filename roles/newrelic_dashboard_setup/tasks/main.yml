@@ -1,0 +1,16 @@
+---
+# tasks/main.yml for newrelic_dashboard_setup
+# Build standard dashboards for services
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - newrelic_dashboard_setup_host is defined
+    fail_msg: "newrelic_dashboard_setup_host must be defined"
+    quiet: true
+
+- name: Execute newrelic dashboard setup
+  ansible.builtin.debug:
+    msg: >-
+      Build standard dashboards for services.
+      Target: {{ newrelic_dashboard_setup_host }}

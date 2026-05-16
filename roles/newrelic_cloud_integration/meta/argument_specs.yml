@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: "Configure cloud provider integrations"
+    options:
+      newrelic_cloud_integration_host:
+        description: Target host address
+        type: str
+        required: true
+      newrelic_cloud_integration_username:
+        description: Authentication username
+        type: str
+      newrelic_cloud_integration_password:
+        description: Authentication password
+        type: str
+      newrelic_cloud_integration_api_key:
+        description: API key for authentication
+        type: str
+      newrelic_cloud_integration_validate_certs:
+        description: Validate SSL certificates
+        type: bool
+        default: true
+      newrelic_cloud_integration_state:
+        description: Desired state
+        type: str
+        default: present
+        choices: [present, absent]
