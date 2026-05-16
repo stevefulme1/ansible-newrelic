@@ -82,7 +82,7 @@ class InventoryModule(BaseInventoryPlugin):
 
         host = self.get_option("host")
         api_key = self.get_option("api_key")
-        group = self.inventory.add_group("newrelic")
+        self.inventory.add_group("newrelic")
 
         # Discovery logic - connect to API and populate inventory
         try:
