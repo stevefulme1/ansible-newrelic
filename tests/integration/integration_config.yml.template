@@ -1,0 +1,6 @@
+---
+# Integration test configuration for stevefulme1.newrelic
+newrelic_host: "CHANGEME"
+newrelic_api_key: "CHANGEME"
+validate_certs: true
+resource_prefix: "ansible-ci-newrelic"
