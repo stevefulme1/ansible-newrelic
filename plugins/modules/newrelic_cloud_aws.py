@@ -104,14 +104,30 @@ def main():
     resource_id = module.params.get("link_id")
 
     if state == "present":
+        existing = None
         if resource_id:
-            result = client.update("cloud_aws", resource_id, module.params)
+            existing = client.get("cloud_aws", resource_id)
+        elif module.params.get("name"):
+            candidates = client.list("cloud_aws", {{"name": module.params["name"]}})
+            if candidates:
+                existing = candidates[0]
+
+        if existing:
+            if module.check_mode:
+                module.exit_json(changed=False, cloud_aws=existing)
+            result = client.update("cloud_aws", resource_id or existing.get("id", ""), module.params)
+            module.exit_json(changed=True, cloud_aws=result)
         else:
             if module.check_mode:
                 module.exit_json(changed=True)
             result = client.create("cloud_aws", module.params)
-        module.exit_json(changed=True, cloud_aws=result)
+            module.exit_json(changed=True, cloud_aws=result)
     else:
+        existing = None
+        if resource_id:
+            existing = client.get("cloud_aws", resource_id)
+        if not existing:
+            module.exit_json(changed=False)
         if module.check_mode:
             module.exit_json(changed=True)
         client.delete("cloud_aws", resource_id)

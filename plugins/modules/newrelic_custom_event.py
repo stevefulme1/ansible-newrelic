@@ -104,14 +104,30 @@ def main():
     resource_id = module.params.get("event_type")
 
     if state == "present":
+        existing = None
         if resource_id:
-            result = client.update("custom_event", resource_id, module.params)
+            existing = client.get("custom_event", resource_id)
+        elif module.params.get("name"):
+            candidates = client.list("custom_event", {{"name": module.params["name"]}})
+            if candidates:
+                existing = candidates[0]
+
+        if existing:
+            if module.check_mode:
+                module.exit_json(changed=False, custom_event=existing)
+            result = client.update("custom_event", resource_id or existing.get("id", ""), module.params)
+            module.exit_json(changed=True, custom_event=result)
         else:
             if module.check_mode:
                 module.exit_json(changed=True)
             result = client.create("custom_event", module.params)
-        module.exit_json(changed=True, custom_event=result)
+            module.exit_json(changed=True, custom_event=result)
     else:
+        existing = None
+        if resource_id:
+            existing = client.get("custom_event", resource_id)
+        if not existing:
+            module.exit_json(changed=False)
         if module.check_mode:
             module.exit_json(changed=True)
         client.delete("custom_event", resource_id)

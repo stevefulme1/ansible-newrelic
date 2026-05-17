@@ -101,14 +101,30 @@ def main():
     resource_id = module.params.get("sli_guid")
 
     if state == "present":
+        existing = None
         if resource_id:
-            result = client.update("service_level", resource_id, module.params)
+            existing = client.get("service_level", resource_id)
+        elif module.params.get("name"):
+            candidates = client.list("service_level", {{"name": module.params["name"]}})
+            if candidates:
+                existing = candidates[0]
+
+        if existing:
+            if module.check_mode:
+                module.exit_json(changed=False, service_level=existing)
+            result = client.update("service_level", resource_id or existing.get("id", ""), module.params)
+            module.exit_json(changed=True, service_level=result)
         else:
             if module.check_mode:
                 module.exit_json(changed=True)
             result = client.create("service_level", module.params)
-        module.exit_json(changed=True, service_level=result)
+            module.exit_json(changed=True, service_level=result)
     else:
+        existing = None
+        if resource_id:
+            existing = client.get("service_level", resource_id)
+        if not existing:
+            module.exit_json(changed=False)
         if module.check_mode:
             module.exit_json(changed=True)
         client.delete("service_level", resource_id)
