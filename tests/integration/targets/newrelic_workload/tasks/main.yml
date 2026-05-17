@@ -1,0 +1,90 @@
+---
+# Integration tests for stevefulme1.newrelic.newrelic_workload
+# These tests require valid credentials configured in integration_config.yml
+
+- name: Create workload (check_mode)
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: present
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  check_mode: true
+  register: check_result
+
+- name: Verify check_mode reports changed
+  ansible.builtin.assert:
+    that:
+      - check_result is changed
+
+- name: Create workload
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: present
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  register: create_result
+
+- name: Verify workload was created
+  ansible.builtin.assert:
+    that:
+      - create_result is changed
+      - create_result.workload is defined
+
+- name: Create workload again (idempotency)
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: present
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  register: idem_result
+
+- name: Verify idempotent create
+  ansible.builtin.assert:
+    that:
+      - idem_result is not changed
+
+- name: Delete workload (check_mode)
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: absent
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  check_mode: true
+  register: delete_check
+
+- name: Verify check_mode delete reports changed
+  ansible.builtin.assert:
+    that:
+      - delete_check is changed
+
+- name: Delete workload
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: absent
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  register: delete_result
+
+- name: Verify workload was deleted
+  ansible.builtin.assert:
+    that:
+      - delete_result is changed
+
+- name: Delete workload again (idempotent)
+  stevefulme1.newrelic.newrelic_workload:
+    host: "{{ newrelic_host }}"
+    api_key: "{{ newrelic_api_key }}"
+    state: absent
+    name: "ansible-test-{{ resource_prefix }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+  register: delete_idem
+
+- name: Verify idempotent delete
+  ansible.builtin.assert:
+    that:
+      - delete_idem is not changed
