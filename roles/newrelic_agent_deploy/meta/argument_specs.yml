@@ -13,9 +13,11 @@ argument_specs:
       newrelic_agent_deploy_password:
         description: Authentication password
         type: str
+        no_log: true
       newrelic_agent_deploy_api_key:
         description: API key for authentication
         type: str
+        no_log: true
       newrelic_agent_deploy_validate_certs:
         description: Validate SSL certificates
         type: bool

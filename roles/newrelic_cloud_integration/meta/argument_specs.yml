@@ -13,9 +13,11 @@ argument_specs:
       newrelic_cloud_integration_password:
         description: Authentication password
         type: str
+        no_log: true
       newrelic_cloud_integration_api_key:
         description: API key for authentication
         type: str
+        no_log: true
       newrelic_cloud_integration_validate_certs:
         description: Validate SSL certificates
         type: bool
