@@ -8,6 +8,16 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    account_id: "{{ newrelic_account_id }}"
+    permissions: PUBLIC_READ_WRITE
+    pages:
+      - name: Overview
+        widgets:
+          - title: Throughput
+            configuration:
+              area:
+                nrqlQueries:
+                  - query: "SELECT count(*) FROM Transaction"
     validate_certs: "{{ validate_certs | default(true) }}"
   check_mode: true
   register: check_result
@@ -16,6 +26,7 @@
   ansible.builtin.assert:
     that:
       - check_result is changed
+      - check_result.diff is defined
 
 - name: Create dashboard
   stevefulme1.newrelic.newrelic_dashboard:
@@ -23,6 +34,16 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    account_id: "{{ newrelic_account_id }}"
+    permissions: PUBLIC_READ_WRITE
+    pages:
+      - name: Overview
+        widgets:
+          - title: Throughput
+            configuration:
+              area:
+                nrqlQueries:
+                  - query: "SELECT count(*) FROM Transaction"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: create_result
 
@@ -31,6 +52,7 @@
     that:
       - create_result is changed
       - create_result.dashboard is defined
+      - create_result.dashboard.guid is defined
 
 - name: Create dashboard again (idempotency)
   stevefulme1.newrelic.newrelic_dashboard:
@@ -38,10 +60,20 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    account_id: "{{ newrelic_account_id }}"
+    permissions: PUBLIC_READ_WRITE
+    pages:
+      - name: Overview
+        widgets:
+          - title: Throughput
+            configuration:
+              area:
+                nrqlQueries:
+                  - query: "SELECT count(*) FROM Transaction"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: idem_result
 
-- name: Verify idempotent create
+- name: Verify idempotent create returns changed=false
   ansible.builtin.assert:
     that:
       - idem_result is not changed
@@ -51,7 +83,7 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    dashboard_guid: "{{ create_result.dashboard.guid }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   check_mode: true
   register: delete_check
@@ -66,7 +98,7 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    dashboard_guid: "{{ create_result.dashboard.guid }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: delete_result
 
@@ -80,11 +112,11 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    dashboard_guid: "{{ create_result.dashboard.guid }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: delete_idem
 
-- name: Verify idempotent delete
+- name: Verify idempotent delete returns changed=false
   ansible.builtin.assert:
     that:
       - delete_idem is not changed

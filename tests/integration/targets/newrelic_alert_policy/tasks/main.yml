@@ -8,6 +8,7 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    incident_preference: PER_POLICY
     validate_certs: "{{ validate_certs | default(true) }}"
   check_mode: true
   register: check_result
@@ -16,6 +17,7 @@
   ansible.builtin.assert:
     that:
       - check_result is changed
+      - check_result.diff is defined
 
 - name: Create alert_policy
   stevefulme1.newrelic.newrelic_alert_policy:
@@ -23,6 +25,7 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    incident_preference: PER_POLICY
     validate_certs: "{{ validate_certs | default(true) }}"
   register: create_result
 
@@ -38,10 +41,11 @@
     api_key: "{{ newrelic_api_key }}"
     state: present
     name: "ansible-test-{{ resource_prefix }}"
+    incident_preference: PER_POLICY
     validate_certs: "{{ validate_certs | default(true) }}"
   register: idem_result
 
-- name: Verify idempotent create
+- name: Verify idempotent create returns changed=false
   ansible.builtin.assert:
     that:
       - idem_result is not changed
@@ -51,7 +55,7 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    policy_id: "{{ create_result.alert_policy.id }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   check_mode: true
   register: delete_check
@@ -66,7 +70,7 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    policy_id: "{{ create_result.alert_policy.id }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: delete_result
 
@@ -80,11 +84,11 @@
     host: "{{ newrelic_host }}"
     api_key: "{{ newrelic_api_key }}"
     state: absent
-    name: "ansible-test-{{ resource_prefix }}"
+    policy_id: "{{ create_result.alert_policy.id }}"
     validate_certs: "{{ validate_certs | default(true) }}"
   register: delete_idem
 
-- name: Verify idempotent delete
+- name: Verify idempotent delete returns changed=false
   ansible.builtin.assert:
     that:
       - delete_idem is not changed
