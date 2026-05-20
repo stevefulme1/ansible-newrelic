@@ -4,29 +4,17 @@ name: newrelic
 version: 0.1.0
 readme: README.md
 authors:
-  - Steve Fulmer <sfulmer@redhat.com>
-description: Ansible collection for New Relic management via NerdGraph API and Event-Driven Automation Status: Pre-release. Under active development.
-license_file: LICENSE
+  - Auto-generated from New Relic NerdGraph API
+description: Ansible collection for the New Relic NerdGraph API API
+license:
+  - GPL-3.0-or-later
 tags:
-  - newrelic
-  - monitoring
-  - observability
+  - new
+  - relic
   - nerdgraph
-  - eda
-  - alerts
-  - dashboards
-  - synthetic
-  - slo
+  - api
 repository: https://github.com/stevefulme1/ansible-newrelic
-documentation: https://github.com/stevefulme1/ansible-newrelic/blob/main/README.md
-homepage: https://github.com/stevefulme1/ansible-newrelic
-issues: https://github.com/stevefulme1/ansible-newrelic/issues
 build_ignore:
-  - .gitignore
-  - .ansible-lint
-  - changelogs/.plugin-cache.yaml
   - tests/output
-  - tests/.pytest_cache
-  - '*.pyc'
-  - '*.pyo'
-  - __pycache__
+  - .tox
+  - .venv

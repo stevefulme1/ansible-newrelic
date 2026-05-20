@@ -1,313 +1,240 @@
-# -*- coding: utf-8 -*-
-# Copyright 2026 Steve Fulmer
-# Apache-2.0 (see LICENSE)
 
-"""New Relic API client supporting REST v2, NerdGraph, and Synthetics v3."""
+# -*- coding: utf-8 -*-
+
+# Copyright: (c) 2024, Auto-generated from New Relic NerdGraph API
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import json
+import time
 
-IMPORT_ERRORS = []
-try:
-    import requests
-    HAS_REQUESTS = True
-except ImportError as e:
-    HAS_REQUESTS = False
-    IMPORT_ERRORS.append(e)
+from ansible.module_utils.urls import open_url
+from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError
+from ansible.module_utils.six.moves.urllib.parse import urlencode, urljoin
 
 
-# Resource endpoint mapping for real New Relic APIs
-RESOURCE_ENDPOINTS = {
-    "alert_policy": {
-        "api": "rest",
-        "base": "/v2/alerts_policies.json",
-        "item": "/v2/alerts_policies/{id}.json",
-        "id_field": "id",
-        "list_key": "policies",
-    },
-    "dashboard": {
-        "api": "nerdgraph",
-        "id_field": "guid",
-    },
-    "synthetic_monitor": {
-        "api": "synthetics",
-        "base": "/v3/monitors",
-        "item": "/v3/monitors/{id}",
-        "id_field": "id",
-        "list_key": "monitors",
-    },
-}
+class ClientError(Exception):
+    """Exception raised by the API client."""
 
-# NerdGraph mutations and queries for dashboards
-NERDGRAPH_QUERIES = {
-    "dashboard_get": """
-        query($guid: EntityGuid!) {
-          actor {
-            entity(guid: $guid) {
-              ... on DashboardEntity {
-                guid
-                name
-                description
-                permissions
-                pages {
-                  name
-                  widgets {
-                    title
-                    configuration { area { nrqlQueries { query } } }
-                  }
-                }
-              }
-            }
-          }
-        }
-    """,
-    "dashboard_list": """
-        query($accountId: Int!) {
-          actor {
-            entitySearch(queryBuilder: {type: DASHBOARD}) {
-              results {
-                entities {
-                  ... on DashboardEntityOutline {
-                    guid
-                    name
-                    accountId
-                  }
-                }
-              }
-            }
-          }
-        }
-    """,
-    "dashboard_create": """
-        mutation($accountId: Int!, $dashboard: DashboardInput!) {
-          dashboardCreate(accountId: $accountId, dashboard: $dashboard) {
-            entityResult {
-              guid
-              name
-            }
-            errors {
-              description
-              type
-            }
-          }
-        }
-    """,
-    "dashboard_update": """
-        mutation($guid: EntityGuid!, $dashboard: DashboardInput!) {
-          dashboardUpdate(guid: $guid, dashboard: $dashboard) {
-            entityResult {
-              guid
-              name
-            }
-            errors {
-              description
-              type
-            }
-          }
-        }
-    """,
-    "dashboard_delete": """
-        mutation($guid: EntityGuid!) {
-          dashboardDelete(guid: $guid) {
-            status
-            errors {
-              description
-              type
-            }
-          }
-        }
-    """,
-}
+    def __init__(self, message, status_code=None, response_body=None):
+        super(ClientError, self).__init__(message)
+        self.status_code = status_code
+        self.response_body = response_body
 
 
-class ApiClient:
-    """API client for New Relic (REST v2, NerdGraph, Synthetics v3)."""
+def argument_spec():
+    """Return the shared authentication argument spec for all modules."""
+    return dict(
+
+        api_key=dict(type="str", required=True, no_log=True),
+
+
+        api_url=dict(
+            type="str",
+            required=False,
+            default="https://api.newrelic.com/graphql",
+        ),
+        validate_certs=dict(type="bool", default=True),
+        request_timeout=dict(type="int", default=30),
+    )
+
+
+class Client:
+    """HTTP client for the newrelic API with auth, retry, and pagination."""
+
+    MAX_RETRIES = 3
+    RETRY_BACKOFF_BASE = 2  # seconds
+    RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
 
     def __init__(self, module):
         self.module = module
-        self.host = module.params["host"]
-        self.validate_certs = module.params.get("validate_certs", True)
-        self.session = requests.Session()
-        self.session.verify = self.validate_certs
-        self._authenticate()
+        self.base_url = module.params["api_url"].rstrip("/")
+        self.validate_certs = module.params["validate_certs"]
+        self.timeout = module.params["request_timeout"]
+        self.headers = self._build_auth_headers()
 
-    def _authenticate(self):
-        api_key = self.module.params.get("api_key")
-        if api_key:
-            # New Relic uses Api-Key header for REST and NerdGraph
-            self.session.headers["Api-Key"] = api_key
-        self.session.headers["Content-Type"] = "application/json"
+    def _build_auth_headers(self):
+        """Construct authentication headers based on the configured auth type."""
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
-    def _rest_url(self, path):
-        return "https://{host}{path}".format(host=self.host, path=path)
 
-    def _nerdgraph_url(self):
-        return "https://api.newrelic.com/graphql"
 
-    def _synthetics_url(self, path):
-        return "https://synthetics.newrelic.com/synthetics/api{path}".format(path=path)
+        headers["X-API-Key"] = self.module.params["api_key"]
 
-    def _endpoint(self, resource_type):
-        ep = RESOURCE_ENDPOINTS.get(resource_type)
-        if not ep:
-            self.module.fail_json(
-                msg="Unknown resource type: {0}".format(resource_type)
+
+
+        return headers
+
+    def _build_url(self, path, params=None):
+        """Build the full URL from a path and optional query parameters."""
+        url = "{0}/{1}".format(self.base_url, path.lstrip("/"))
+
+        if params:
+            url = "{0}?{1}".format(url, urlencode(params, doseq=True))
+        return url
+
+    def _request(self, method, path, data=None, params=None):
+        """Execute an HTTP request with retry and backoff on rate limits."""
+        url = self._build_url(path, params)
+        body = json.dumps(data).encode("utf-8") if data is not None else None
+
+        last_error = None
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                response = open_url(
+                    url,
+                    method=method,
+                    headers=self.headers,
+                    data=body,
+                    validate_certs=self.validate_certs,
+                    timeout=self.timeout,
+                )
+                response_body = response.read()
+                if response_body:
+                    return json.loads(response_body)
+                return {}
+
+            except HTTPError as e:
+                status = e.code
+                response_body = ""
+                try:
+                    response_body = e.read().decode("utf-8", errors="replace")
+                except Exception:
+                    pass
+
+                if status in self.RETRY_STATUS_CODES and attempt < self.MAX_RETRIES:
+                    # Retry with exponential backoff
+                    retry_after = None
+                    if status == 429:
+                        retry_after_header = e.headers.get("Retry-After")
+                        if retry_after_header:
+                            try:
+                                retry_after = int(retry_after_header)
+                            except ValueError:
+                                pass
+                    wait_time = retry_after or (self.RETRY_BACKOFF_BASE ** (attempt + 1))
+                    time.sleep(wait_time)
+                    last_error = e
+                    continue
+
+                msg = "API request failed: {0} {1} returned {2}".format(
+                    method, url, status
+                )
+                if response_body:
+                    try:
+                        detail = json.loads(response_body)
+                        msg = "{0}: {1}".format(
+                            msg,
+                            detail.get("message", detail.get("error", response_body)),
+                        )
+                    except (ValueError, TypeError):
+                        msg = "{0}: {1}".format(msg, response_body)
+
+                raise ClientError(msg, status_code=status, response_body=response_body)
+
+            except URLError as e:
+                if attempt < self.MAX_RETRIES:
+                    time.sleep(self.RETRY_BACKOFF_BASE ** (attempt + 1))
+                    last_error = e
+                    continue
+                raise ClientError(
+                    "Failed to connect to {0}: {1}".format(url, str(e))
+                )
+
+        raise ClientError(
+            "Max retries ({0}) exceeded for {1} {2}: {3}".format(
+                self.MAX_RETRIES, method, path, str(last_error)
             )
-        return ep
-
-    # ── REST v2 (alert_policy) ───────────────────────────────────────
-
-    def get(self, resource_type, resource_id):
-        """GET a single resource by ID. Returns None if 404."""
-        ep = self._endpoint(resource_type)
-
-        if ep["api"] == "nerdgraph":
-            return self._nerdgraph_get(resource_id)
-        if ep["api"] == "synthetics":
-            url = self._synthetics_url(ep["item"].format(id=resource_id))
-        else:
-            url = self._rest_url(ep["item"].format(id=resource_id))
-
-        resp = self.session.get(url)
-        if resp.status_code == 404:
-            return None
-        resp.raise_for_status()
-        data = resp.json()
-        # REST v2 wraps in a singular key (e.g. {"policy": {...}})
-        if ep.get("list_key") and ep["list_key"].rstrip("s") in data:
-            return data[ep["list_key"].rstrip("s")]
-        return data
-
-    def list(self, resource_type, params=None):
-        """List resources."""
-        ep = self._endpoint(resource_type)
-
-        if ep["api"] == "nerdgraph":
-            return self._nerdgraph_list()
-        if ep["api"] == "synthetics":
-            url = self._synthetics_url(ep["base"])
-        else:
-            url = self._rest_url(ep["base"])
-
-        resp = self.session.get(url, params=params or {})
-        resp.raise_for_status()
-        data = resp.json()
-        return data.get(ep.get("list_key", "data"), [])
-
-    def find_by_name(self, resource_type, name):
-        """Find a resource by name. Returns first match or None."""
-        items = self.list(resource_type)
-        for item in items:
-            if item.get("name") == name:
-                return item
-        return None
-
-    def create(self, resource_type, payload):
-        """Create a new resource."""
-        ep = self._endpoint(resource_type)
-
-        if ep["api"] == "nerdgraph":
-            return self._nerdgraph_create(payload)
-        if ep["api"] == "synthetics":
-            url = self._synthetics_url(ep["base"])
-        else:
-            url = self._rest_url(ep["base"])
-
-        resp = self.session.post(url, json=payload)
-        resp.raise_for_status()
-        return resp.json()
-
-    def update(self, resource_type, resource_id, payload):
-        """Update an existing resource."""
-        ep = self._endpoint(resource_type)
-
-        if ep["api"] == "nerdgraph":
-            return self._nerdgraph_update(resource_id, payload)
-        if ep["api"] == "synthetics":
-            url = self._synthetics_url(ep["item"].format(id=resource_id))
-        else:
-            url = self._rest_url(ep["item"].format(id=resource_id))
-
-        resp = self.session.put(url, json=payload)
-        resp.raise_for_status()
-        return resp.json()
-
-    def delete(self, resource_type, resource_id):
-        """Delete a resource. Returns silently on 404."""
-        ep = self._endpoint(resource_type)
-
-        if ep["api"] == "nerdgraph":
-            return self._nerdgraph_delete(resource_id)
-        if ep["api"] == "synthetics":
-            url = self._synthetics_url(ep["item"].format(id=resource_id))
-        else:
-            url = self._rest_url(ep["item"].format(id=resource_id))
-
-        resp = self.session.delete(url)
-        if resp.status_code == 404:
-            return
-        resp.raise_for_status()
-
-    # ── NerdGraph (dashboard) ────────────────────────────────────────
-
-    def _nerdgraph_query(self, query, variables=None):
-        """Execute a NerdGraph query/mutation."""
-        payload = {"query": query, "variables": variables or {}}
-        resp = self.session.post(self._nerdgraph_url(), json=payload)
-        resp.raise_for_status()
-        data = resp.json()
-        if "errors" in data and data["errors"]:
-            self.module.fail_json(
-                msg="NerdGraph error: {0}".format(json.dumps(data["errors"]))
-            )
-        return data.get("data", {})
-
-    def _nerdgraph_get(self, guid):
-        data = self._nerdgraph_query(
-            NERDGRAPH_QUERIES["dashboard_get"], {"guid": guid}
         )
-        entity = data.get("actor", {}).get("entity")
-        return entity
 
-    def _nerdgraph_list(self):
-        data = self._nerdgraph_query(NERDGRAPH_QUERIES["dashboard_list"], {})
-        results = (
-            data.get("actor", {})
-            .get("entitySearch", {})
-            .get("results", {})
-            .get("entities", [])
-        )
-        return results
+    def get(self, path, params=None):
+        """Perform a GET request."""
+        return self._request("GET", path, params=params)
 
-    def _nerdgraph_create(self, payload):
-        data = self._nerdgraph_query(
-            NERDGRAPH_QUERIES["dashboard_create"],
-            {"accountId": payload.get("account_id"), "dashboard": payload.get("dashboard", payload)},
-        )
-        result = data.get("dashboardCreate", {})
-        errors = result.get("errors", [])
-        if errors:
-            self.module.fail_json(msg="Dashboard create failed: {0}".format(errors))
-        return result.get("entityResult", {})
+    def post(self, path, data=None, params=None):
+        """Perform a POST request."""
+        return self._request("POST", path, data=data, params=params)
 
-    def _nerdgraph_update(self, guid, payload):
-        data = self._nerdgraph_query(
-            NERDGRAPH_QUERIES["dashboard_update"],
-            {"guid": guid, "dashboard": payload.get("dashboard", payload)},
-        )
-        result = data.get("dashboardUpdate", {})
-        errors = result.get("errors", [])
-        if errors:
-            self.module.fail_json(msg="Dashboard update failed: {0}".format(errors))
-        return result.get("entityResult", {})
+    def put(self, path, data=None, params=None):
+        """Perform a PUT request."""
+        return self._request("PUT", path, data=data, params=params)
 
-    def _nerdgraph_delete(self, guid):
-        data = self._nerdgraph_query(
-            NERDGRAPH_QUERIES["dashboard_delete"], {"guid": guid}
-        )
-        result = data.get("dashboardDelete", {})
-        errors = result.get("errors", [])
-        if errors:
-            self.module.fail_json(msg="Dashboard delete failed: {0}".format(errors))
+    def patch(self, path, data=None, params=None):
+        """Perform a PATCH request."""
+        return self._request("PATCH", path, data=data, params=params)
+
+    def delete(self, path, params=None):
+        """Perform a DELETE request."""
+        return self._request("DELETE", path, params=params)
+
+    def get_paginated(self, path, params=None, results_key=None):
+        """
+        Fetch all pages of a paginated list endpoint.
+
+        Supports common pagination patterns:
+        - next URL in response (``next``)
+        - page/offset based (``page``, ``offset``)
+
+        Returns the full list of items.
+        """
+        if params is None:
+            params = {}
+
+        all_items = []
+        current_path = path
+        current_params = dict(params)
+
+        while True:
+            response = self.get(current_path, params=current_params)
+
+            if isinstance(response, list):
+                all_items.extend(response)
+                break
+
+            # Extract items from the response
+            items = []
+            if results_key and results_key in response:
+                items = response[results_key]
+            else:
+                for key in ("results", "data", "items", "records"):
+                    if key in response:
+                        items = response[key]
+                        break
+
+            if isinstance(items, list):
+                all_items.extend(items)
+            else:
+                break
+
+            # Check for next page
+            next_url = response.get("next")
+            if next_url:
+                # next is a full URL — extract path and params
+                if next_url.startswith("http"):
+                    from ansible.module_utils.six.moves.urllib.parse import urlparse, parse_qs
+
+                    parsed = urlparse(next_url)
+                    current_path = parsed.path
+                    current_params = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+                else:
+                    current_path = next_url
+                    current_params = {}
+                continue
+
+            # Check for page-based pagination
+            total = response.get("total", response.get("count", response.get("total_count")))
+            if total is not None and len(all_items) < total:
+                page = current_params.get("page", 1)
+                current_params["page"] = page + 1
+                continue
+
+            # No more pages
+            break
+
+        return all_items
