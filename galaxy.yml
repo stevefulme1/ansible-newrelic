@@ -1,11 +1,11 @@
 ---
 namespace: stevefulme1
 name: newrelic
-version: 2.1.1
+version: 0.1.0
 readme: README.md
 authors:
   - Steve Fulmer <sfulmer@redhat.com>
-description: Ansible collection for New Relic management via NerdGraph API and Event-Driven Automation
+description: Ansible collection for New Relic management via NerdGraph API and Event-Driven Automation Status: Pre-release. Under active development.
 license_file: LICENSE
 tags:
   - newrelic
