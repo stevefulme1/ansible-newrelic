@@ -4,8 +4,8 @@ name: newrelic
 version: 0.1.0
 readme: README.md
 authors:
-  - Auto-generated from New Relic NerdGraph API
-description: Ansible collection for the New Relic NerdGraph API API
+  - Steve Fulmer (@stevefulme1)
+description: Ansible collection for the New Relic observability platform
 license:
   - GPL-3.0-or-later
 tags:
