@@ -8,6 +8,7 @@ authors:
 description: Ansible collection for the New Relic observability platform
 license:
   - GPL-3.0-or-later
+  - GPL-3.0-or-later
 tags:
   - new
   - relic
