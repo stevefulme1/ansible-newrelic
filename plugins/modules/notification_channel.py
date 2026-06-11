@@ -48,7 +48,10 @@ options:
 
     required: true
 
-    choices: ["EMAIL", "WEBHOOK", "PAGERDUTY_ACCOUNT_INTEGRATION", "PAGERDUTY_SERVICE_INTEGRATION", "SLACK", "JIRA", "SERVICENOW"]
+    choices: [
+      "EMAIL", "WEBHOOK", "PAGERDUTY_ACCOUNT_INTEGRATION",
+      "PAGERDUTY_SERVICE_INTEGRATION", "SLACK", "JIRA", "SERVICENOW"
+    ]
 
   properties:
     description:
@@ -203,7 +206,10 @@ def main():
 
                 required=True,
 
-                choices=['EMAIL', 'WEBHOOK', 'PAGERDUTY_ACCOUNT_INTEGRATION', 'PAGERDUTY_SERVICE_INTEGRATION', 'SLACK', 'JIRA', 'SERVICENOW'],
+                choices=[
+                    'EMAIL', 'WEBHOOK', 'PAGERDUTY_ACCOUNT_INTEGRATION',
+                    'PAGERDUTY_SERVICE_INTEGRATION', 'SLACK', 'JIRA', 'SERVICENOW'
+                ],
 
             ),
 
