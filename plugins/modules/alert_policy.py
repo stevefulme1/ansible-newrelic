@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,21 +40,13 @@ options:
 
     required: true
 
-
-
-
-
   incident_preference:
     description:
       - >-
         Incident preference: PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET
     type: str
 
-
     choices: ["PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET"]
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -59,31 +57,19 @@ EXAMPLES = r"""
 - name: Create a alert_policy
   stevefulme1.newrelic.alert_policy:
 
-
     name: "example_name"
-
-
-
 
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a alert_policy
   stevefulme1.newrelic.alert_policy:
     id: "existing_id"
 
-
-
-
     incident_preference: "updated_incident_preference"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a alert_policy
   stevefulme1.newrelic.alert_policy:
@@ -101,13 +87,11 @@ id:
   returned: success
   type: str
 
-
 name:
   description: >-
     The alert policy name
   returned: success
   type: str
-
 
 incident_preference:
   description: >-
@@ -115,15 +99,7 @@ incident_preference:
   returned: success
   type: str
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -150,7 +126,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -190,20 +165,12 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             incident_preference=dict(
                 type="str",
 
-
                 choices=['PER_POLICY', 'PER_CONDITION', 'PER_CONDITION_AND_TARGET'],
-
-
-
 
             ),
 
@@ -240,7 +207,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -259,7 +225,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -268,7 +233,6 @@ def main():
                 result["name"] = current.get("name")
 
                 result["incident_preference"] = current.get("incident_preference")
-
 
         elif state == "absent":
             if current is not None:
@@ -283,7 +247,6 @@ def main():
                         "{id}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)

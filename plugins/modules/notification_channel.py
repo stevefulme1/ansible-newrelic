@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,10 +40,6 @@ options:
 
     required: true
 
-
-
-
-
   destination_type:
     description:
       - >-
@@ -46,11 +48,7 @@ options:
 
     required: true
 
-
     choices: ["EMAIL", "WEBHOOK", "PAGERDUTY_ACCOUNT_INTEGRATION", "PAGERDUTY_SERVICE_INTEGRATION", "SLACK", "JIRA", "SERVICENOW"]
-
-
-
 
   properties:
     description:
@@ -59,19 +57,11 @@ options:
     type: list
     elements: str
 
-
-
-
-
   auth:
     description:
       - >-
         Authentication configuration
     type: dict
-
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -82,43 +72,23 @@ EXAMPLES = r"""
 - name: Create a notification_channel
   stevefulme1.newrelic.notification_channel:
 
-
     name: "example_name"
-
-
 
     destination_type: "example_destination_type"
 
-
-
-
-
-
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a notification_channel
   stevefulme1.newrelic.notification_channel:
     id: "existing_id"
 
-
-
-
-
-
     properties: "updated_properties"
-
-
 
     auth: "updated_auth"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a notification_channel
   stevefulme1.newrelic.notification_channel:
@@ -136,13 +106,11 @@ id:
   returned: success
   type: str
 
-
 name:
   description: >-
     Destination name
   returned: success
   type: str
-
 
 type:
   description: >-
@@ -150,22 +118,13 @@ type:
   returned: success
   type: str
 
-
 active:
   description: >-
     Whether destination is active
   returned: success
   type: bool
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -192,7 +151,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -238,10 +196,6 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             destination_type=dict(
@@ -249,29 +203,17 @@ def main():
 
                 required=True,
 
-
                 choices=['EMAIL', 'WEBHOOK', 'PAGERDUTY_ACCOUNT_INTEGRATION', 'PAGERDUTY_SERVICE_INTEGRATION', 'SLACK', 'JIRA', 'SERVICENOW'],
-
-
-
 
             ),
 
             properties=dict(
                 type="list", elements="str",
 
-
-
-
-
             ),
 
             auth=dict(
                 type="dict",
-
-
-
-
 
             ),
 
@@ -308,7 +250,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -327,7 +268,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -338,7 +278,6 @@ def main():
                 result["type"] = current.get("type")
 
                 result["active"] = current.get("active")
-
 
         elif state == "absent":
             if current is not None:
@@ -353,7 +292,6 @@ def main():
                         "{id}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)

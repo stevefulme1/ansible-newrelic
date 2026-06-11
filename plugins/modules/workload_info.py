@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -32,15 +38,6 @@ options:
     type: str
     required: false
 
-
-
-
-
-
-
-
-
-
   page:
     description:
       - Page number for paginated results.
@@ -67,12 +64,10 @@ EXAMPLES = r"""
   stevefulme1.newrelic.workload_info:
   register: result
 
-
 - name: List workload resources filtered by name
   stevefulme1.newrelic.workload_info:
     name: "my_workload"
   register: result
-
 
 - name: List workload resources with pagination
   stevefulme1.newrelic.workload_info:
@@ -94,33 +89,22 @@ workloads:
         Workload GUID
       type: str
 
-
     name:
       description: >-
         Workload name
       type: str
-
 
     entity_guids:
       description: >-
         Included entity GUIDs
       type: list
 
-
     status:
       description: >-
         Workload status
       type: str
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def fetch_single(client, identifier):
@@ -136,27 +120,14 @@ def fetch_single(client, identifier):
     return None
 
 
-
 def fetch_list(client, module):
     """List workload resources with optional filtering and pagination."""
 
     params = {}
 
-
     name_filter = module.params.get("name")
     if name_filter is not None:
         params["name"] = name_filter
-
-
-
-
-
-
-
-
-
-
-
 
     page = module.params.get("page")
     page_size = module.params.get("page_size")
@@ -174,7 +145,6 @@ def fetch_list(client, module):
         return client.get_paginated("/graphql", params=params)
 
 
-
 def main():
     spec = auth_argument_spec()
     spec.update(
@@ -182,15 +152,6 @@ def main():
             guid=dict(type="str", required=False),
 
             name=dict(type="str", required=False),
-
-
-
-
-
-
-
-
-
 
             page=dict(type="int", required=False),
             page_size=dict(type="int", required=False),

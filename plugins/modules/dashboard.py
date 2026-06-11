@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,19 +40,11 @@ options:
 
     required: true
 
-
-
-
-
   description:
     description:
       - >-
         Dashboard description
     type: str
-
-
-
-
 
   permissions:
     description:
@@ -54,11 +52,7 @@ options:
         Dashboard permissions
     type: str
 
-
     choices: ["PUBLIC_READ_ONLY", "PRIVATE"]
-
-
-
 
   pages:
     description:
@@ -66,10 +60,6 @@ options:
         List of dashboard page definitions
     type: list
     elements: str
-
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -80,43 +70,23 @@ EXAMPLES = r"""
 - name: Create a dashboard
   stevefulme1.newrelic.dashboard:
 
-
     name: "example_name"
-
-
-
-
-
-
-
 
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a dashboard
   stevefulme1.newrelic.dashboard:
     guid: "existing_id"
 
-
-
-
     description: "updated_description"
-
-
 
     permissions: "updated_permissions"
 
-
-
     pages: "updated_pages"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a dashboard
   stevefulme1.newrelic.dashboard:
@@ -134,13 +104,11 @@ guid:
   returned: success
   type: str
 
-
 name:
   description: >-
     Dashboard name
   returned: success
   type: str
-
 
 description:
   description: >-
@@ -148,13 +116,11 @@ description:
   returned: success
   type: str
 
-
 permissions:
   description: >-
     Dashboard permissions
   returned: success
   type: str
-
 
 pages:
   description: >-
@@ -162,15 +128,7 @@ pages:
   returned: success
   type: list
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -197,7 +155,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -243,38 +200,22 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             description=dict(
                 type="str",
-
-
-
-
 
             ),
 
             permissions=dict(
                 type="str",
 
-
                 choices=['PUBLIC_READ_ONLY', 'PRIVATE'],
-
-
-
 
             ),
 
             pages=dict(
                 type="list", elements="str",
-
-
-
-
 
             ),
 
@@ -311,7 +252,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -330,7 +270,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -343,7 +282,6 @@ def main():
                 result["permissions"] = current.get("permissions")
 
                 result["pages"] = current.get("pages")
-
 
         elif state == "absent":
             if current is not None:
@@ -358,7 +296,6 @@ def main():
                         "{guid}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)

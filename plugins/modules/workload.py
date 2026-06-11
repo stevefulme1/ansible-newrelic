@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,20 +40,12 @@ options:
 
     required: true
 
-
-
-
-
   entity_guids:
     description:
       - >-
         List of entity GUIDs to include
     type: list
     elements: str
-
-
-
-
 
   entity_search_queries:
     description:
@@ -56,20 +54,12 @@ options:
     type: list
     elements: str
 
-
-
-
-
   scope_accounts:
     description:
       - >-
         Account IDs to scope the workload
     type: list
     elements: str
-
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -80,43 +70,23 @@ EXAMPLES = r"""
 - name: Create a workload
   stevefulme1.newrelic.workload:
 
-
     name: "example_name"
-
-
-
-
-
-
-
 
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a workload
   stevefulme1.newrelic.workload:
     guid: "existing_id"
 
-
-
-
     entity_guids: "updated_entity_guids"
-
-
 
     entity_search_queries: "updated_entity_search_queries"
 
-
-
     scope_accounts: "updated_scope_accounts"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a workload
   stevefulme1.newrelic.workload:
@@ -134,13 +104,11 @@ guid:
   returned: success
   type: str
 
-
 name:
   description: >-
     Workload name
   returned: success
   type: str
-
 
 entity_guids:
   description: >-
@@ -148,22 +116,13 @@ entity_guids:
   returned: success
   type: list
 
-
 status:
   description: >-
     Workload status
   returned: success
   type: str
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -190,7 +149,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -236,36 +194,20 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             entity_guids=dict(
                 type="list", elements="str",
-
-
-
-
 
             ),
 
             entity_search_queries=dict(
                 type="list", elements="str",
 
-
-
-
-
             ),
 
             scope_accounts=dict(
                 type="list", elements="str",
-
-
-
-
 
             ),
 
@@ -302,7 +244,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -321,7 +262,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -332,7 +272,6 @@ def main():
                 result["entity_guids"] = current.get("entity_guids")
 
                 result["status"] = current.get("status")
-
 
         elif state == "absent":
             if current is not None:
@@ -347,7 +286,6 @@ def main():
                         "{guid}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)

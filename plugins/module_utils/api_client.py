@@ -32,7 +32,6 @@ def argument_spec():
         api_key=dict(type="str", required=True, no_log=True),
         account_id=dict(type="str", required=False),
 
-
         api_url=dict(
             type="str",
             required=False,
@@ -64,11 +63,7 @@ class Client:
             "Accept": "application/json",
         }
 
-
-
         headers["API-Key"] = self.module.params["api_key"]
-
-
 
         return headers
 

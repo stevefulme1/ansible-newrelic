@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,10 +40,6 @@ options:
 
     required: true
 
-
-
-
-
   monitor_type:
     description:
       - >-
@@ -46,11 +48,7 @@ options:
 
     required: true
 
-
     choices: ["SIMPLE", "BROWSER", "SCRIPTED_BROWSER", "SCRIPTED_API"]
-
-
-
 
   uri:
     description:
@@ -58,21 +56,16 @@ options:
         URI to monitor
     type: str
 
-
-
-
-
   period:
     description:
       - >-
         Monitor frequency
     type: str
 
-
-    choices: ["EVERY_MINUTE", "EVERY_5_MINUTES", "EVERY_10_MINUTES", "EVERY_15_MINUTES", "EVERY_30_MINUTES", "EVERY_HOUR", "EVERY_6_HOURS", "EVERY_12_HOURS", "EVERY_DAY"]
-
-
-
+    choices: [
+        "EVERY_MINUTE", "EVERY_5_MINUTES", "EVERY_10_MINUTES", "EVERY_15_MINUTES",
+        "EVERY_30_MINUTES", "EVERY_HOUR", "EVERY_6_HOURS", "EVERY_12_HOURS", "EVERY_DAY"
+    ]
 
   locations:
     description:
@@ -81,21 +74,13 @@ options:
     type: list
     elements: str
 
-
-
-
-
   status:
     description:
       - >-
         Monitor status
     type: str
 
-
     choices: ["ENABLED", "DISABLED", "MUTED"]
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -106,55 +91,27 @@ EXAMPLES = r"""
 - name: Create a synthetics_monitor
   stevefulme1.newrelic.synthetics_monitor:
 
-
     name: "example_name"
-
-
 
     monitor_type: "example_monitor_type"
 
-
-
-
-
-
-
-
-
-
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a synthetics_monitor
   stevefulme1.newrelic.synthetics_monitor:
     guid: "existing_id"
 
-
-
-
-
-
     uri: "updated_uri"
-
-
 
     period: "updated_period"
 
-
-
     locations: "updated_locations"
-
-
 
     status: "updated_status"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a synthetics_monitor
   stevefulme1.newrelic.synthetics_monitor:
@@ -172,13 +129,11 @@ guid:
   returned: success
   type: str
 
-
 name:
   description: >-
     Monitor name
   returned: success
   type: str
-
 
 monitor_type:
   description: >-
@@ -186,13 +141,11 @@ monitor_type:
   returned: success
   type: str
 
-
 uri:
   description: >-
     Monitored URI
   returned: success
   type: str
-
 
 period:
   description: >-
@@ -200,13 +153,11 @@ period:
   returned: success
   type: str
 
-
 status:
   description: >-
     Monitor status
   returned: success
   type: str
-
 
 locations:
   description: >-
@@ -214,15 +165,7 @@ locations:
   returned: success
   type: list
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -249,7 +192,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -301,10 +243,6 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             monitor_type=dict(
@@ -312,51 +250,32 @@ def main():
 
                 required=True,
 
-
                 choices=['SIMPLE', 'BROWSER', 'SCRIPTED_BROWSER', 'SCRIPTED_API'],
-
-
-
 
             ),
 
             uri=dict(
                 type="str",
 
-
-
-
-
             ),
 
             period=dict(
                 type="str",
 
-
-                choices=['EVERY_MINUTE', 'EVERY_5_MINUTES', 'EVERY_10_MINUTES', 'EVERY_15_MINUTES', 'EVERY_30_MINUTES', 'EVERY_HOUR', 'EVERY_6_HOURS', 'EVERY_12_HOURS', 'EVERY_DAY'],
-
-
-
+                choices=['EVERY_MINUTE', 'EVERY_5_MINUTES', 'EVERY_10_MINUTES', 'EVERY_15_MINUTES',
+                         'EVERY_30_MINUTES', 'EVERY_HOUR', 'EVERY_6_HOURS', 'EVERY_12_HOURS', 'EVERY_DAY'],
 
             ),
 
             locations=dict(
                 type="list", elements="str",
 
-
-
-
-
             ),
 
             status=dict(
                 type="str",
 
-
                 choices=['ENABLED', 'DISABLED', 'MUTED'],
-
-
-
 
             ),
 
@@ -393,7 +312,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -412,7 +330,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -430,7 +347,6 @@ def main():
 
                 result["locations"] = current.get("locations")
 
-
         elif state == "absent":
             if current is not None:
                 result["changed"] = True
@@ -444,7 +360,6 @@ def main():
                         "{guid}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)

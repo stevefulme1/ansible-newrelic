@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
+    Client,
+    ClientError,
+    argument_spec as auth_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -34,19 +40,11 @@ options:
 
     required: true
 
-
-
-
-
   description:
     description:
       - >-
         SLI description
     type: str
-
-
-
-
 
   entity_guid:
     description:
@@ -56,10 +54,6 @@ options:
 
     required: true
 
-
-
-
-
   events:
     description:
       - >-
@@ -68,20 +62,12 @@ options:
 
     required: true
 
-
-
-
-
   objectives:
     description:
       - >-
         SLO objectives for this SLI
     type: list
     elements: str
-
-
-
-
 
 extends_documentation_fragment:
   - stevefulme1.newrelic.auth
@@ -92,49 +78,25 @@ EXAMPLES = r"""
 - name: Create a sli
   stevefulme1.newrelic.sli:
 
-
     name: "example_name"
-
-
-
-
 
     entity_guid: "example_entity_guid"
 
-
-
     events: "example_events"
-
-
-
 
     state: present
   # API: POST /graphql
-
-
 
 - name: Update a sli
   stevefulme1.newrelic.sli:
     id: "existing_id"
 
-
-
-
     description: "updated_description"
-
-
-
-
-
-
 
     objectives: "updated_objectives"
 
-
     state: present
-  # API:  
-
-
+  # API:
 
 - name: Delete a sli
   stevefulme1.newrelic.sli:
@@ -152,13 +114,11 @@ id:
   returned: success
   type: str
 
-
 name:
   description: >-
     SLI name
   returned: success
   type: str
-
 
 description:
   description: >-
@@ -166,13 +126,11 @@ description:
   returned: success
   type: str
 
-
 entity_guid:
   description: >-
     Associated entity GUID
   returned: success
   type: str
-
 
 objectives:
   description: >-
@@ -180,15 +138,7 @@ objectives:
   returned: success
   type: list
 
-
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.stevefulme1.newrelic.plugins.module_utils.api_client import (
-    Client,
-    ClientError,
-    argument_spec as auth_argument_spec,
-)
 
 
 def get_current_state(client, module):
@@ -215,7 +165,6 @@ def get_current_state(client, module):
         return None
     except ClientError:
         return None
-
 
 
 def needs_update(current, desired):
@@ -264,18 +213,10 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             description=dict(
                 type="str",
-
-
-
-
 
             ),
 
@@ -284,10 +225,6 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             events=dict(
@@ -295,18 +232,10 @@ def main():
 
                 required=True,
 
-
-
-
-
             ),
 
             objectives=dict(
                 type="list", elements="str",
-
-
-
-
 
             ),
 
@@ -343,7 +272,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             elif needs_update(current, desired):
                 # Resource exists but needs updating
                 result["changed"] = True
@@ -362,7 +290,6 @@ def main():
                     )
                     result.update(response if isinstance(response, dict) else {})
 
-
             else:
                 # Resource exists and is up-to-date
 
@@ -375,7 +302,6 @@ def main():
                 result["entity_guid"] = current.get("entity_guid")
 
                 result["objectives"] = current.get("objectives")
-
 
         elif state == "absent":
             if current is not None:
@@ -390,7 +316,6 @@ def main():
                         "{id}", str(identifier)
                     )
                     client.delete(path)
-
 
     except ClientError as e:
         module.fail_json(msg=str(e), **result)
