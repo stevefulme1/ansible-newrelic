@@ -103,10 +103,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install test dependencies
-        run: pip install pytest pytest-mock
+        run: pip install ansible-core pytest pytest-mock
 
       - name: Run unit tests
         working-directory: ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: python -m pytest tests/unit/ -v --tb=short
 
   integration:
