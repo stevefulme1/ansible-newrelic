@@ -15,3 +15,7 @@ rules:
   indentation:
     spaces: 2
     indent-sequences: true
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 0
