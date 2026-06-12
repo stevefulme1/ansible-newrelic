@@ -19,3 +19,8 @@ rules:
     max: 2
     max-start: 0
     max-end: 0
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
